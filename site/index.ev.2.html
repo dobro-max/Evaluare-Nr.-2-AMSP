@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evaluare Nr2 — Git Documentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0a0c10;
+      --surface:   #111318;
+      --card:      #161920;
+      --border:    #1e2330;
+      --accent:    #4ade80;
+      --accent2:   #38bdf8;
+      --accent3:   #f472b6;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --num:       #1e2330;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .4;
+    }
+
+    /* ── grid lines ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none; z-index: 0; opacity: .3;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: relative; z-index: 10;
+      padding: 60px 40px 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-end; justify-content: space-between;
+      flex-wrap: wrap; gap: 20px;
+    }
+
+    .header-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 12px;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      font-weight: 800; line-height: 1.05;
+      background: linear-gradient(135deg, var(--text) 40%, var(--muted));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .header-meta {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem; color: var(--muted); line-height: 1.8;
+      text-align: right;
+    }
+    .header-meta span { color: var(--accent2); }
+
+    /* ── NAV PILLS ── */
+    nav {
+      position: relative; z-index: 10;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+
+    nav a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .72rem; padding: 6px 14px;
+      border: 1px solid var(--border); border-radius: 100px;
+      color: var(--muted); text-decoration: none;
+      transition: all .2s;
+    }
+    nav a:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative; z-index: 10;
+      max-width: 960px; margin: 0 auto;
+      padding: 60px 40px 100px;
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex; align-items: center; gap: 16px;
+      margin: 60px 0 36px;
+    }
+
+    .section-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .65rem; letter-spacing: .12em; text-transform: uppercase;
+      padding: 4px 12px; border-radius: 4px;
+      white-space: nowrap;
+    }
+    .badge-commit  { background: #4ade8022; color: var(--accent);  border: 1px solid #4ade8044; }
+    .badge-branch  { background: #38bdf822; color: var(--accent2); border: 1px solid #38bdf844; }
+
+    .section-header h2 {
+      font-size: 1.3rem; font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, var(--border) 60%, transparent);
+      margin-bottom: 8px; flex: 1;
+    }
+
+    /* ── STEP CARD ── */
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 0 24px;
+      margin-bottom: 4px;
+      animation: fadeUp .4s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .step:nth-child(2)  { animation-delay: .05s }
+    .step:nth-child(3)  { animation-delay: .10s }
+    .step:nth-child(4)  { animation-delay: .15s }
+    .step:nth-child(5)  { animation-delay: .20s }
+    .step:nth-child(6)  { animation-delay: .25s }
+    .step:nth-child(7)  { animation-delay: .30s }
+    .step:nth-child(8)  { animation-delay: .35s }
+    .step:nth-child(9)  { animation-delay: .40s }
+    .step:nth-child(10) { animation-delay: .45s }
+
+    /* left column: number + line */
+    .step-num-col {
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .step-num {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85rem; font-weight: 700;
+      color: var(--muted);
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+
+    .step:hover .step-num {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 16px #4ade8022;
+    }
+
+    .step-line {
+      width: 1px; flex: 1;
+      background: var(--border);
+      margin: 8px 0;
+      min-height: 20px;
+    }
+
+    /* right column: content */
+    .step-content {
+      padding-bottom: 36px;
+    }
+
+    .step-title {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text); margin-bottom: 6px;
+      padding-top: 10px;
+    }
+
+    .step-desc {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .75rem; color: var(--muted);
+      margin-bottom: 16px; line-height: 1.6;
+    }
+
+    /* ── SCREENSHOT SLOT ── */
+    .screenshot-slot {
+      width: 100%;
+      border-radius: 12px;
+      border: 2px dashed var(--border);
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px;
+      min-height: 120px;
+      padding: 24px;
+      transition: border-color .3s, background .3s;
+      cursor: pointer;
+    }
+
+    .screenshot-slot:hover {
+      border-color: var(--accent2);
+      background: #111820;
+    }
+
+    .screenshot-slot img {
+      display: none;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .screenshot-slot.has-image {
+      padding: 12px;
+      min-height: unset;
+    }
+    .screenshot-slot.has-image .placeholder-content { display: none; }
+    .screenshot-slot.has-image img { display: block; }
+
+    .placeholder-content {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px;
+      pointer-events: none;
+    }
+
+    .placeholder-icon {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      background: var(--num);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .placeholder-icon svg { opacity: .4; }
+
+    .placeholder-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .68rem; color: var(--muted); letter-spacing: .08em;
+    }
+
+    .screenshot-input { display: none; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 10;
+      border-top: 1px solid var(--border);
+      padding: 30px 40px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+
+    .footer-brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; color: var(--muted);
+    }
+    .footer-brand span { color: var(--accent); }
+
+    .done-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .7rem; color: var(--muted);
+    }
+    .done-count strong { color: var(--accent2); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      header, nav, main, footer { padding-left: 20px; padding-right: 20px; }
+      .step { grid-template-columns: 44px 1fr; gap: 0 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <p class="header-tag">// Evaluare Nr2 — Git & GitHub</p>
+    <h1>Git<br>Documentation</h1>
+  </div>
+  <div class="header-meta">
+    <div>repo &nbsp;<span>Evaluare-Nr2</span></div>
+    <div>branch &nbsp;<span>master / stage / develop</span></div>
+    <div>pași &nbsp;<span id="totalSteps">—</span></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <a href="#commit1">I. Commit</a>
+  <a href="#commit2">II. Commit</a>
+  <a href="#branch1">I. Branch</a>
+  <a href="#branch2">II. Branch</a>
+  <a href="#branch3">III. Branch</a>
+</nav>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ════════════ I. COMMIT ════════════ -->
+  <div class="section-header" id="commit1">
+    <span class="section-badge badge-commit">I. Commit</span>
+    <div class="section-divider"></div>
+    <h2>Repo &amp; Fișiere de bază</h2>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">01</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Creare repository „Evaluare Nr2" pe GitHub</div>
+      <div class="step-desc">GitHub → New repository → Name: Evaluare-Nr2 → Create repository</div>
+      <div class="screenshot-slot" data-src="screenshots/pas01.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">02</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Adăugare fișier index.ev.2.html (remote)</div>
+      <div class="step-desc">GitHub → Add file → Create new file → index.ev.2.html → Commit changes</div>
+      <div class="screenshot-slot" data-src="screenshots/pas02.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">03</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Clonare repository local</div>
+      <div class="step-desc">git clone https://github.com/USER/Evaluare-Nr2.git &nbsp;&&nbsp; cd Evaluare-Nr2</div>
+      <div class="screenshot-slot" data-src="screenshots/pas03.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">04</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Adăugare locală fișier settings.xml</div>
+      <div class="step-desc">touch settings.xml &nbsp;→&nbsp; git add settings.xml</div>
+      <div class="screenshot-slot" data-src="screenshots/pas04.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">05</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Commit settings.xml</div>
+      <div class="step-desc">git commit -m "Commit file settings.xml"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas05.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">06</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Redenumire settings.xml → configuration.xml</div>
+      <div class="step-desc">git mv settings.xml configuration.xml</div>
+      <div class="screenshot-slot" data-src="screenshots/pas06.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">07</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Commit configuration.xml</div>
+      <div class="step-desc">git commit -m "Commit configuration.xml"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas07.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">08</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Modificare mesaj ultimul commit (amend)</div>
+      <div class="step-desc">git commit --amend -m "Commit file configuration.xml"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas08.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">09</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Push toate modificările</div>
+      <div class="step-desc">git push origin main</div>
+      <div class="screenshot-slot" data-src="screenshots/pas09.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">10</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Evaluare rezultat — I. Commit</div>
+      <div class="step-desc">Verificați pe GitHub că apar commiturile cu mesajele corecte</div>
+      <div class="screenshot-slot" data-src="screenshots/pas10.png"></div>
+    </div>
+  </div>
+
+  <!-- ════════════ II. COMMIT ════════════ -->
+  <div class="section-header" id="commit2">
+    <span class="section-badge badge-commit">II. Commit</span>
+    <div class="section-divider"></div>
+    <h2>Reset &amp; Push Force</h2>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">01</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Adăugare remotă page1.html</div>
+      <div class="step-desc">GitHub → Add file → page1.html → Commit changes</div>
+      <div class="screenshot-slot" data-src="screenshots/pas11.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">02</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Actualizare repository local</div>
+      <div class="step-desc">git pull origin main</div>
+      <div class="screenshot-slot" data-src="screenshots/pas12.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">03</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Revenire la „Commit file configuration.xml"</div>
+      <div class="step-desc">git log --oneline &nbsp;→&nbsp; git reset --hard &lt;hash&gt;</div>
+      <div class="screenshot-slot" data-src="screenshots/pas13.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">04</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Actualizare repository remote (force)</div>
+      <div class="step-desc">git push origin main --force</div>
+      <div class="screenshot-slot" data-src="screenshots/pas14.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">05</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Evaluare rezultat — II. Commit</div>
+      <div class="step-desc">page1.html dispare; istoricul se oprește la „Commit file configuration.xml"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas15.png"></div>
+    </div>
+  </div>
+
+  <!-- ════════════ I. BRANCH ════════════ -->
+  <div class="section-header" id="branch1">
+    <span class="section-badge badge-branch">I. Branch</span>
+    <div class="section-divider"></div>
+    <h2>Branch stage din main</h2>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">01</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Creare remote branch stage din main</div>
+      <div class="step-desc">GitHub → Branches → New branch: stage from main</div>
+      <div class="screenshot-slot" data-src="screenshots/pas16.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">02</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Creare hosts.xml în branch stage + commit</div>
+      <div class="step-desc">GitHub (branch: stage) → Add file → hosts.xml → "Commit file hosts.xml"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas17.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">03</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Actualizare repository local</div>
+      <div class="step-desc">git fetch origin &nbsp;→&nbsp; git checkout stage &nbsp;→&nbsp; git pull origin stage</div>
+      <div class="screenshot-slot" data-src="screenshots/pas18.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">04</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Merge stage → main (local + remote)</div>
+      <div class="step-desc">git checkout main &nbsp;→&nbsp; git merge stage &nbsp;→&nbsp; git push origin main</div>
+      <div class="screenshot-slot" data-src="screenshots/pas19.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">05</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Evaluare rezultat — I. Branch</div>
+      <div class="step-desc">hosts.xml apare în main pe GitHub</div>
+      <div class="screenshot-slot" data-src="screenshots/pas20.png"></div>
+    </div>
+  </div>
+
+  <!-- ════════════ II. BRANCH ════════════ -->
+  <div class="section-header" id="branch2">
+    <span class="section-badge badge-branch">II. Branch</span>
+    <div class="section-divider"></div>
+    <h2>Branch dev din stage</h2>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">01</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Creare local branch dev din stage</div>
+      <div class="step-desc">git checkout stage &nbsp;→&nbsp; git checkout -b dev</div>
+      <div class="screenshot-slot" data-src="screenshots/pas21.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">02</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Creare fișier env.txt</div>
+      <div class="step-desc">touch env.txt &nbsp;→&nbsp; git add env.txt</div>
+      <div class="screenshot-slot" data-src="screenshots/pas22.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">03</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Commit env.txt</div>
+      <div class="step-desc">git commit -m "Commit file env.txt"</div>
+      <div class="screenshot-slot" data-src="screenshots/pas23.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">04</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Merge dev → stage</div>
+      <div class="step-desc">git checkout stage &nbsp;→&nbsp; git merge dev</div>
+      <div class="screenshot-slot" data-src="screenshots/pas24.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">05</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Actualizare repository remote</div>
+      <div class="step-desc">git push origin stage</div>
+      <div class="screenshot-slot" data-src="screenshots/pas25.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">06</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Evaluare rezultat — II. Branch</div>
+      <div class="step-desc">env.txt apare în branch-ul stage pe GitHub</div>
+      <div class="screenshot-slot" data-src="screenshots/pas26.png"></div>
+    </div>
+  </div>
+
+  <!-- ════════════ III. BRANCH ════════════ -->
+  <div class="section-header" id="branch3">
+    <span class="section-badge badge-branch">III. Branch</span>
+    <div class="section-divider"></div>
+    <h2>Redenumire dev → develop</h2>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">01</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Redenumire locală branch dev → develop</div>
+      <div class="step-desc">git branch -m dev develop</div>
+      <div class="screenshot-slot" data-src="screenshots/pas27.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">02</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Actualizare repository remote</div>
+      <div class="step-desc">git push origin develop &nbsp;→&nbsp; git push origin --delete dev</div>
+      <div class="screenshot-slot" data-src="screenshots/pas28.png"></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num-col"><div class="step-num">03</div><div class="step-line"></div></div>
+    <div class="step-content">
+      <div class="step-title">Evaluare rezultat — III. Branch</div>
+      <div class="step-desc">Branch dev dispare pe GitHub; apare develop în locul lui</div>
+      <div class="screenshot-slot" data-src="screenshots/pas29.png"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">// <span>Evaluare Nr2</span> — Git &amp; GitHub Documentation</div>
+  <div class="done-count">Screenshots încărcate: <strong id="doneCount">0</strong> / <strong id="totalCount">—</strong></div>
+</footer>
+
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+    const slots = document.querySelectorAll('.screenshot-slot[data-src]');
+    let loaded = 0;
+
+    document.getElementById('totalCount').textContent = slots.length;
+    document.getElementById('totalSteps').textContent = slots.length + ' pași';
+
+    slots.forEach(slot => {
+      const src = slot.getAttribute('data-src');
+      const img = document.createElement('img');
+      img.alt = 'screenshot';
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'none';
+      img.style.borderRadius = '8px';
+
+      const placeholder = document.createElement('div');
+      placeholder.className = 'placeholder-content';
+      placeholder.innerHTML = `
+        <div class="placeholder-icon">
+          <svg width="20" height="20" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M3 9h18M9 21V9"/>
+          </svg>
+        </div>
+        <span class="placeholder-label">screenshots/${src.split('/')[1]}</span>
+      `;
+
+      img.onload = () => {
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+        slot.classList.add('has-image');
+        loaded++;
+        document.getElementById('doneCount').textContent = loaded;
+      };
+
+      img.onerror = () => {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      };
+
+      img.src = src;
+      slot.appendChild(placeholder);
+      slot.appendChild(img);
+    });
+  });
+</script>
+</body>
+</html>
